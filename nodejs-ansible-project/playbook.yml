@@ -1,0 +1,41 @@
+---
+- name: Setup Node.js App on EC2
+  hosts: webserver
+  become: yes
+
+  tasks:
+    - name: Update system packages
+      yum:
+        name: '*'
+        state: latest
+
+    - name: Add Node.js 16 repo
+      shell: curl -sL https://rpm.nodesource.com/setup_16.x | bash -
+      args:
+        executable: /bin/bash
+
+    - name: Install Node.js and Git
+      yum:
+        name:
+          - nodejs
+          - git
+        state: present
+
+    - name: Clone Node.js App from GitHub
+      git:
+        repo: https://github.com/priyabuss2004/node-app.git
+        dest: /home/ec2-user/node-app
+        update: yes
+        version: main
+      become_user: ec2-user
+
+    - name: Install npm dependencies
+      npm:
+        path: /home/ec2-user/node-app
+      become_user: ec2-user
+
+    - name: Start the Node.js app
+      shell: npm start &
+      args:
+        chdir: /home/ec2-user/node-app
+      become_user: ec2-user
